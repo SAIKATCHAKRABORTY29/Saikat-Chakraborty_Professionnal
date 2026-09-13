@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Learning Simulator</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f5f7fb;
+        color: #172033;
+        line-height: 1.5;
+    }
+
+    .app {
+        min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+        background: #101828;
+        color: white;
+        padding: 24px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .brand h1 {
+        font-size: 24px;
+        letter-spacing: -0.5px;
+    }
+
+    .brand p {
+        color: #aab4c5;
+        font-size: 13px;
+        margin-top: 3px;
+    }
+
+    .score {
+        background: #1d2939;
+        border: 1px solid #344054;
+        padding: 10px 16px;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .score span {
+        display: block;
+        color: #98a2b3;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .score strong {
+        font-size: 20px;
+    }
+
+    /* LAYOUT */
+    .container {
+        max-width: 1450px;
+        margin: auto;
+        padding: 28px;
+    }
+
+    .intro {
+        margin-bottom: 25px;
+    }
+
+    .intro h2 {
+        font-size: 28px;
+        margin-bottom: 5px;
+    }
+
+    .intro p {
+        color: #667085;
+        max-width: 850px;
+    }
+
+    /* PIPELINE */
+    .pipeline {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 8px 2px 20px;
+        margin-bottom: 20px;
+    }
+
+    .pipeline-step {
+        min-width: 145px;
+        padding: 13px;
+        background: white;
+        border: 1px solid #e4e7ec;
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .pipeline-step:hover {
+        transform: translateY(-2px);
+        border-color: #667085;
+    }
+
+    .pipeline-step.active {
+        background: #101828;
+        color: white;
+        border-color: #101828;
+    }
+
+    .pipeline-step .number {
+        font-size: 11px;
+        color: #98a2b3;
+        margin-bottom: 3px;
+    }
+
+    .pipeline-step strong {
+        font-size: 13px;
+    }
+
+    .arrow {
+        display: flex;
+        align-items: center;
+        color: #98a2b3;
+        font-size: 20px;
+    }
+
+    /* MAIN GRID */
+    .grid {
+        display: grid;
+        grid-template-columns: 1.1fr 1.8fr;
+        gap: 20px;
+    }
+
+    .card {
+        background: white;
+        border: 1px solid #e4e7ec;
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 3px 15px rgba(16,24,40,.04);
+    }
+
+    .card h3 {
+        font-size: 17px;
+        margin-bottom: 5px;
+    }
+
+    .subtitle {
+        color: #667085;
+        font-size: 12px;
+        margin-bottom: 18px;
+    }
+
+    /* CONTROLS */
+    textarea,
+    input,
+    select {
+        width: 100%;
+        border: 1px solid #d0d5dd;
+        border-radius: 10px;
+        padding: 12px;
+        font: inherit;
+        outline: none;
+        background: #fff;
+    }
+
+    textarea {
+        min-height: 135px;
+        resize: vertical;
+    }
+
+    textarea:focus,
+    input:focus,
+    select:focus {
+        border-color: #667085;
+    }
+
+    .btn-row {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+    }
+
+    button {
+        border: 0;
+        border-radius: 9px;
+        padding: 10px 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .primary {
+        background: #101828;
+        color: white;
+    }
+
+    .primary:hover {
+        background: #1d2939;
+    }
+
+    .secondary {
+        background: #f2f4f7;
+        color: #344054;
+    }
+
+    .secondary:hover {
+        background: #e4e7ec;
+    }
+
+    .danger {
+        background: #fef3f2;
+        color: #b42318;
+    }
+
+    /* DOCUMENTS */
+    .doc {
+        border: 1px solid #eaecf0;
+        border-radius: 10px;
+        padding: 13px;
+        margin-bottom: 10px;
+    }
+
+    .doc-title {
+        font-weight: 700;
+        font-size: 13px;
+    }
+
+    .doc p {
+        color: #667085;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    /* STEP DETAIL */
+    .step-detail {
+        min-height: 350px;
+    }
+
+    .step-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 18px;
+    }
+
+    .step-label {
+        display: inline-block;
+        background: #f2f4f7;
+        color: #475467;
+        padding: 4px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        margin-bottom: 8px;
+    }
+
+    .step-detail h2 {
+        font-size: 23px;
+        letter-spacing: -.4px;
+    }
+
+    .definition {
+        color: #475467;
+        font-size: 14px;
+        margin-bottom: 18px;
+    }
+
+    /* FLOW VISUAL */
+    .flow-box {
+        background: #f8fafc;
+        border: 1px solid #eaecf0;
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 12px;
+    }
+
+    .flow-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #98a2b3;
+        letter-spacing: 1px;
+        margin-bottom: 9px;
+    }
+
+    .flow {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+    }
+
+    .node {
+        padding: 8px 11px;
+        background: white;
+        border: 1px solid #d0d5dd;
+        border-radius: 8px;
+        font-size: 12px;
+    }
+
+    .node.highlight {
+        background: #101828;
+        color: white;
+        border-color: #101828;
+    }
+
+    .flow-arrow {
+        color: #98a2b3;
+    }
+
+    /* CHUNKS */
+    .chunks {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .chunk {
+        border: 1px solid #d0d5dd;
+        border-radius: 10px;
+        padding: 12px;
+        background: white;
+        font-size: 12px;
+        position: relative;
+    }
+
+    .chunk .chunk-id {
+        font-size: 10px;
+        color: #98a2b3;
+        margin-bottom: 5px;
+    }
+
+    .chunk.relevant {
+        border-color: #101828;
+        box-shadow: inset 3px 0 0 #101828;
+    }
+
+    .chunk-score {
+        margin-top: 7px;
+        font-weight: 700;
+        font-size: 11px;
+    }
+
+    /* SEARCH RESULTS */
+    .result {
+        border: 1px solid #eaecf0;
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 9px;
+    }
+
+    .result-top {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .bar {
+        height: 6px;
+        background: #eaecf0;
+        border-radius: 10px;
+        margin-top: 8px;
+        overflow: hidden;
+    }
+
+    .bar span {
+        display: block;
+        height: 100%;
+        background: #101828;
+        border-radius: 10px;
+    }
+
+    .result p {
+        font-size: 12px;
+        color: #667085;
+        margin-top: 7px;
+    }
+
+    /* ANSWER */
+    .answer {
+        background: #101828;
+        color: white;
+        border-radius: 13px;
+        padding: 18px;
+        font-size: 14px;
+        margin-top: 15px;
+    }
+
+    .answer-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #98a2b3;
+        margin-bottom: 8px;
+    }
+
+    /* EDUCATIONAL PANEL */
+    .learning {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .concept {
+        background: #f8fafc;
+        border: 1px solid #eaecf0;
+        border-radius: 10px;
+        padding: 13px;
+        margin-top: 10px;
+    }
+
+    .concept strong {
+        font-size: 13px;
+    }
+
+    .concept p {
+        color: #667085;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    /* PROGRESS */
+    .progress-container {
+        margin: 20px 0;
+    }
+
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #667085;
+        margin-bottom: 6px;
+    }
+
+    .progress {
+        height: 7px;
+        background: #eaecf0;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .progress span {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: #101828;
+        transition: width .3s;
+    }
+
+    /* RESPONSIVE */
+    @media(max-width: 950px) {
+        .grid,
+        .learning {
+            grid-template-columns: 1fr;
+        }
+
+        header {
+            padding: 20px;
+        }
+
+        .container {
+            padding: 18px;
+        }
+    }
+
+    @media(max-width: 600px) {
+        .chunks {
+            grid-template-columns: 1fr;
+        }
+
+        .intro h2 {
+            font-size: 23px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+    <div class="brand">
+        <h1>RAG Learning Simulator</h1>
+        <p>Understand Retrieval-Augmented Generation step by step</p>
+    </div>
+
+    <div class="score">
+        <span>Learning Progress</span>
+        <strong id="progressText">0 / 10</strong>
+    </div>
+</header>
+
+<main class="container">
+
+    <section class="intro">
+        <h2>How RAG Actually Works</h2>
+        <p>
+            Experiment with a simplified RAG pipeline. Click each stage to understand
+            what happens before the LLM generates its final answer.
+        </p>
+    </section>
+
+    <!-- PIPELINE -->
+    <div class="pipeline" id="pipeline"></div>
+
+    <div class="progress-container">
+        <div class="progress-label">
+            <span>Pipeline explored</span>
+            <span id="progressPercent">0%</span>
+        </div>
+
+        <div class="progress">
+            <span id="progressBar"></span>
+        </div>
+    </div>
+
+    <div class="grid">
+
+        <!-- LEFT -->
+        <section>
+
+            <div class="card">
+                <h3>1. Knowledge Base</h3>
+                <p class="subtitle">
+                    Documents are prepared before users ask questions.
+                </p>
+
+                <div id="documents"></div>
+
+                <div class="btn-row">
+                    <button class="secondary" onclick="resetKnowledge()">
+                        Reset Knowledge Base
+                    </button>
+                </div>
+            </div>
+
+            <br>
+
+            <div class="card">
+                <h3>2. Ask the RAG System</h3>
+                <p class="subtitle">
+                    Try different questions and observe retrieval.
+                </p>
+
+                <textarea id="query">How does RAG improve the accuracy of an LLM?</textarea>
+
+                <div class="btn-row">
+                    <button class="primary" onclick="runRAG()">
+                        ▶ Run RAG
+                    </button>
+
+                    <button class="secondary" onclick="setExample(1)">
+                        Example 1
+                    </button>
+
+                    <button class="secondary" onclick="setExample(2)">
+                        Example 2
+                    </button>
+                </div>
+            </div>
+
+            <br>
+
+            <div class="card">
+                <h3>3. Retrieved Chunks</h3>
+                <p class="subtitle">
+                    These are the pieces of information available to the LLM.
+                </p>
+
+                <div id="chunks" class="chunks"></div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT -->
+        <section>
+
+            <div class="card step-detail">
+
+                <div class="step-header">
+                    <div>
+                        <span class="step-label" id="stepLabel">
+                            STEP 1
+                        </span>
+
+                        <h2 id="stepTitle">
+                            Document Ingestion
+                        </h2>
+                    </div>
+                </div>
+
+                <p class="definition" id="stepDefinition"></p>
+
+                <div class="flow-box">
+                    <div class="flow-title">What happens</div>
+                    <div id="stepFlow" class="flow"></div>
+                </div>
+
+                <div class="flow-box">
+                    <div class="flow-title">Why it matters</div>
+                    <div id="whyItMatters"></div>
+                </div>
+
+                <div class="learning">
+
+                    <div>
+                        <div class="flow-title">Key Concept</div>
+                        <div id="keyConcept"></div>
+                    </div>
+
+                    <div>
+                        <div class="flow-title">Interview Tip</div>
+                        <div id="interviewTip"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <br>
+
+            <div class="card">
+
+                <h3>Retrieval Observatory</h3>
+                <p class="subtitle">
+                    See how vector and keyword search contribute to retrieval.
+                </p>
+
+                <div id="retrievalResults"></div>
+
+            </div>
+
+            <br>
+
+            <div class="card">
+
+                <h3>Final Context → LLM</h3>
+                <p class="subtitle">
+                    Reranked chunks are assembled into context and sent to the generator.
+                </p>
+
+                <div class="flow-box">
+                    <div class="flow">
+                        <div class="node">Retrieved Candidates</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="node">Reranker</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="node highlight">Top-K Context</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="node highlight">LLM</div>
+                    </div>
+                </div>
+
+                <div id="answer" class="answer">
+                    <div class="answer-label">Generated Answer</div>
+                    Run the RAG pipeline to generate an answer.
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   KNOWLEDGE BASE
+========================================================= */
+
+const documents = [
+    {
+        title: "RAG Fundamentals",
+        text: "Retrieval-Augmented Generation combines information retrieval with a large language model. The retriever finds relevant information from an external knowledge base and provides it to the LLM as context."
+    },
+    {
+        title: "Embeddings",
+        text: "Embeddings convert text into numerical vectors that represent semantic meaning. Similar concepts are positioned closer together in vector space."
+    },
+    {
+        title: "Chunking",
+        text: "Large documents are divided into smaller chunks before indexing. Good chunking improves retrieval precision while preserving enough context to answer questions."
+    },
+    {
+        title: "Vector Search",
+        text: "Vector search compares the embedding of a query with document embeddings using similarity measures such as cosine similarity. It is useful for semantic search."
+    },
+    {
+        title: "Keyword Search",
+        text: "Keyword search uses lexical matching to find documents containing important words or phrases. It is useful for exact terminology, product names and identifiers."
+    },
+    {
+        title: "Hybrid Retrieval",
+        text: "Hybrid retrieval combines vector search and keyword search. Combining semantic and lexical signals can improve recall and robustness."
+    },
+    {
+        title: "Reranking",
+        text: "A reranker examines retrieved candidates and scores them again using a stronger relevance model. The highest quality chunks are placed near the top."
+    },
+    {
+        title: "Context Construction",
+        text: "The selected chunks are assembled into a context window. The prompt usually contains the user question, retrieved evidence and instructions for the LLM."
+    },
+    {
+        title: "Generation",
+        text: "The LLM generates the final response using the retrieved context. RAG can reduce unsupported answers by grounding generation in external information."
+    },
+    {
+        title: "RAG Evaluation",
+        text: "RAG systems can be evaluated using retrieval metrics such as Recall@K, MRR and NDCG, as well as answer relevance, faithfulness and context quality."
+    }
+];
+
+
+/* =========================================================
+   PIPELINE DEFINITION
+========================================================= */
+
+const steps = [
+
+    {
+        title: "Document Ingestion",
+        label: "STEP 1",
+        definition:
+            "The system first collects and parses documents from sources such as PDFs, databases, websites or internal knowledge repositories.",
+        flow:
+            ["Documents", "Parsing", "Clean Text"],
+        why:
+            "Without good source data, retrieval quality will be poor regardless of how sophisticated the LLM is.",
+        concept:
+            "Ingestion prepares raw information so that it can be searched and retrieved.",
+        tip:
+            "In interviews, distinguish data ingestion from retrieval. Ingestion happens before the user asks a question."
+    },
+
+    {
+        title: "Chunking",
+        label: "STEP 2",
+        definition:
+            "Documents are divided into smaller pieces called chunks. Chunks are the basic retrieval units in many RAG systems.",
+        flow:
+            ["Clean Text", "Chunking", "Retrieval Units"],
+        why:
+            "Very large chunks may contain irrelevant information. Very small chunks may lose important context.",
+        concept:
+            "Chunk size, overlap and semantic boundaries affect retrieval quality.",
+        tip:
+            "Chunking is normally an ingestion/indexing activity—not something performed after retrieval."
+    },
+
+    {
+        title: "Embedding & Indexing",
+        label: "STEP 3",
+        definition:
+            "Each chunk can be transformed into an embedding vector and stored in a vector index. Keyword systems may also build a lexical index.",
+        flow:
+            ["Chunks", "Embedding Model", "Vector Index"],
+        why:
+            "The index allows the system to efficiently search a large knowledge base.",
+        concept:
+            "An embedding represents semantic meaning numerically.",
+        tip:
+            "Know the distinction between an embedding model and the LLM that generates the final answer."
+    },
+
+    {
+        title: "Query Processing",
+        label: "STEP 4",
+        definition:
+            "The user's question may be cleaned, rewritten, expanded or transformed before retrieval.",
+        flow:
+            ["User Query", "Query Processing", "Search Query"],
+        why:
+            "A well-formed retrieval query can improve the quality of candidate documents.",
+        concept:
+            "Query rewriting, decomposition and expansion are common advanced RAG techniques.",
+        tip:
+            "Do not assume every RAG system performs query rewriting. It is an optional optimization."
+    },
+
+    {
+        title: "Vector Search",
+        label: "STEP 5",
+        definition:
+            "The query is converted into an embedding and compared with document embeddings to find semantically similar chunks.",
+        flow:
+            ["Query Embedding", "Vector DB", "Top-K Candidates"],
+        why:
+            "Vector search can find conceptually relevant information even when the exact query words do not appear in the document.",
+        concept:
+            "Cosine similarity is one common method for measuring vector similarity.",
+        tip:
+            "Vector search is strong for semantic similarity but may struggle with exact identifiers or rare terms."
+    },
+
+    {
+        title: "Keyword Search",
+        label: "STEP 6",
+        definition:
+            "Lexical search looks for matching words, phrases or terms in the indexed documents.",
+        flow:
+            ["Query Terms", "Keyword Index", "Top-K Candidates"],
+        why:
+            "Exact lexical matching is valuable for IDs, names, codes, product numbers and precise terminology.",
+        concept:
+            "BM25 is a widely used lexical retrieval approach.",
+        tip:
+            "Keyword and vector retrieval solve different problems; strong RAG systems often combine them."
+    },
+
+    {
+        title: "Hybrid Retrieval",
+        label: "STEP 7",
+        definition:
+            "Hybrid retrieval combines semantic vector results with lexical keyword results.",
+        flow:
+            ["Vector Results", "Keyword Results", "Combined Candidates"],
+        why:
+            "Combining both signals can increase recall and make retrieval more robust.",
+        concept:
+            "Hybrid retrieval is especially useful when queries mix conceptual language with exact terms.",
+        tip:
+            "Be able to explain why hybrid retrieval may outperform using only vector search."
+    },
+
+    {
+        title: "Reranking",
+        label: "STEP 8",
+        definition:
+            "A reranker evaluates candidate chunks more deeply and assigns a relevance score.",
+        flow:
+            ["Candidates", "Reranker", "Ranked Results"],
+        why:
+            "Initial retrieval is optimized for speed. Reranking can improve precision among the retrieved candidates.",
+        concept:
+            "Retrieve broadly first, then rerank a smaller candidate set.",
+        tip:
+            "Remember the trade-off: reranking usually improves relevance but adds latency and compute."
+    },
+
+    {
+        title: "Context Construction",
+        label: "STEP 9",
+        definition:
+            "The best chunks are assembled into a context that is passed to the LLM along with the user's question.",
+        flow:
+            ["Top Chunks", "Context Window", "Prompt"],
+        why:
+            "The LLM needs the right evidence in its context window to produce a grounded answer.",
+        concept:
+            "Context quality is often as important as retrieval quantity.",
+        tip:
+            "More retrieved chunks do not automatically mean a better answer. Irrelevant context can hurt performance."
+    },
+
+    {
+        title: "Generation & Evaluation",
+        label: "STEP 10",
+        definition:
+            "The LLM generates the answer using the retrieved context. The complete RAG system should then be evaluated.",
+        flow:
+            ["Prompt + Context", "LLM", "Answer"],
+        why:
+            "A successful RAG system needs both strong retrieval and useful, faithful generation.",
+        concept:
+            "Evaluate retrieval and generation separately as well as together.",
+        tip:
+            "Important metrics include Recall@K, MRR, NDCG, faithfulness and answer relevance."
+    }
+
+];
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let currentStep = 0;
+let visited = new Set();
+
+
+/* =========================================================
+   RENDER DOCUMENTS
+========================================================= */
+
+function renderDocuments() {
+
+    const container = document.getElementById("documents");
+
+    container.innerHTML = documents.map((doc, i) => `
+        <div class="doc">
+            <div class="doc-title">${i + 1}. ${doc.title}</div>
+            <p>${doc.text}</p>
+        </div>
+    `).join("");
+
+}
+
+
+/* =========================================================
+   PIPELINE
+========================================================= */
+
+function renderPipeline() {
+
+    const container = document.getElementById("pipeline");
+
+    let html = "";
+
+    steps.forEach((step, index) => {
+
+        html += `
+            <div class="pipeline-step ${index === currentStep ? "active" : ""}"
+                 onclick="showStep(${index})">
+
+                <div class="number">${step.label}</div>
+                <strong>${step.title}</strong>
+
+            </div>
+        `;
+
+        if (index < steps.length - 1) {
+            html += `<div class="arrow">→</div>`;
+        }
+
+    });
+
+    container.innerHTML = html;
+
+}
+
+
+/* =========================================================
+   STEP DISPLAY
+========================================================= */
+
+function showStep(index) {
+
+    currentStep = index;
+
+    visited.add(index);
+
+    const step = steps[index];
+
+    document.getElementById("stepLabel").textContent = step.label;
+    document.getElementById("stepTitle").textContent = step.title;
+    document.getElementById("stepDefinition").textContent = step.definition;
+
+    document.getElementById("stepFlow").innerHTML =
+        step.flow.map((item, i) => {
+
+            return `
+                ${i > 0 ? `<span class="flow-arrow">→</span>` : ""}
+                <div class="node ${i === step.flow.length - 1 ? "highlight" : ""}">
+                    ${item}
+                </div>
+            `;
+
+        }).join("");
+
+    document.getElementById("whyItMatters").innerHTML =
+        `<div class="concept">
+            <p>${step.why}</p>
+        </div>`;
+
+    document.getElementById("keyConcept").innerHTML =
+        `<div class="concept">
+            <strong>${step.title}</strong>
+            <p>${step.concept}</p>
+        </div>`;
+
+    document.getElementById("interviewTip").innerHTML =
+        `<div class="concept">
+            <strong>💡 Interview Tip</strong>
+            <p>${step.tip}</p>
+        </div>`;
+
+    renderPipeline();
+    updateProgress();
+
+}
+
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+function updateProgress() {
+
+    const count = visited.size;
+
+    document.getElementById("progressText").textContent =
+        `${count} / ${steps.length}`;
+
+    const percent = Math.round((count / steps.length) * 100);
+
+    document.getElementById("progressPercent").textContent =
+        `${percent}%`;
+
+    document.getElementById("progressBar").style.width =
+        `${percent}%`;
+}
+
+
+/* =========================================================
+   SIMPLE TOKEN SIMILARITY
+========================================================= */
+
+function tokenize(text) {
+
+    return text
+        .toLowerCase()
+        .replace(/[^\w\s]/g, "")
+        .split(/\s+/)
+        .filter(x => x.length > 2);
+
+}
+
+
+function similarity(query, text) {
+
+    const q = tokenize(query);
+    const t = tokenize(text);
+
+    let matches = 0;
+
+    q.forEach(word => {
+
+        if (t.includes(word)) {
+            matches++;
+        }
+
+    });
+
+    return matches / Math.max(q.length, 1);
+}
+
+
+/* =========================================================
+   RAG SIMULATION
+========================================================= */
+
+function runRAG() {
+
+    const query = document.getElementById("query").value.trim();
+
+    if (!query) {
+        alert("Please enter a question.");
+        return;
+    }
+
+    /*
+        Simulate vector search using semantic keyword groups.
+    */
+
+    const semanticGroups = {
+
+        rag: ["rag", "retrieval", "generation", "grounding", "llm"],
+
+        embedding: ["embedding", "vector", "semantic", "meaning"],
+
+        chunking: ["chunk", "chunks", "document", "split"],
+
+        keyword: ["keyword", "bm25", "lexical", "exact", "term"],
+
+        hybrid: ["hybrid", "combine", "both"],
+
+        rerank: ["rerank", "ranking", "relevance", "candidate"],
+
+        context: ["context", "prompt", "window", "evidence"],
+
+        evaluation: ["evaluate", "evaluation", "metric", "recall", "faithfulness"]
+
+    };
+
+
+    function semanticScore(text) {
+
+        const words = tokenize(query);
+        let score = 0;
+
+        for (const group in semanticGroups) {
+
+            const groupWords = semanticGroups[group];
+
+            const queryHasGroup =
+                words.some(w => groupWords.includes(w));
+
+            if (queryHasGroup) {
+
+                const textHasGroup =
+                    groupWords.some(w =>
+                        tokenize(text).includes(w)
+                    );
+
+                if (textHasGroup) score += 0.35;
+
+            }
+
+        }
+
+        return score;
+    }
+
+
+    const results = documents.map((doc, index) => {
+
+        const keywordScore = similarity(query, doc.text);
+
+        const vectorScore =
+            Math.min(
+                0.98,
+                0.25 + semanticScore(doc.text) + Math.random() * 0.18
+            );
+
+        const hybridScore =
+            (vectorScore * 0.65) +
+            (keywordScore * 0.35);
+
+        const rerankScore =
+            Math.min(
+                0.99,
+                hybridScore + Math.random() * 0.15
+            );
+
+        return {
+            index,
+            doc,
+            vectorScore,
+            keywordScore,
+            hybridScore,
+            rerankScore
+        };
+
+    });
+
+
+    const ranked =
+        results
+            .sort((a, b) =>
+                b.rerankScore - a.rerankScore
+            )
+            .slice(0, 5);
+
+
+    renderRetrieval(ranked);
+
+    renderChunks(ranked);
+
+    generateAnswer(query, ranked);
+
+    /*
+        Automatically show retrieval stage.
+    */
+
+    showStep(4);
+
+}
+
+
+/* =========================================================
+   RETRIEVAL OBSERVATORY
+========================================================= */
+
+function renderRetrieval(results) {
+
+    const container =
+        document.getElementById("retrievalResults");
+
+    container.innerHTML = results.map((r, i) => {
+
+        return `
+            <div class="result">
+
+                <div class="result-top">
+                    <span>${i + 1}. ${r.doc.title}</span>
+                    <span>
+                        Rerank: ${Math.round(r.rerankScore * 100)}%
+                    </span>
+                </div>
+
+                <div class="bar">
+                    <span style="width:${r.rerankScore * 100}%"></span>
+                </div>
+
+                <p>
+                    Vector: ${Math.round(r.vectorScore * 100)}%
+                    &nbsp; | &nbsp;
+                    Keyword: ${Math.round(r.keywordScore * 100)}%
+                    &nbsp; | &nbsp;
+                    Hybrid: ${Math.round(r.hybridScore * 100)}%
+                </p>
+
+            </div>
+        `;
+
+    }).join("");
+
+}
+
+
+/* =========================================================
+   CHUNKS
+========================================================= */
+
+function renderChunks(results) {
+
+    const container =
+        document.getElementById("chunks");
+
+    container.innerHTML = results.map((r, i) => {
+
+        return `
+            <div class="chunk ${i < 3 ? "relevant" : ""}">
+
+                <div class="chunk-id">
+                    CHUNK-${String(r.index + 1).padStart(2, "0")}
+                </div>
+
+                <strong>${r.doc.title}</strong>
+
+                <p>
+                    ${r.doc.text}
+                </p>
+
+                <div class="chunk-score">
+                    Rerank Score:
+                    ${Math.round(r.rerankScore * 100)}%
+                </div>
+
+            </div>
+        `;
+
+    }).join("");
+
+}
+
+
+/* =========================================================
+   GENERATED ANSWER
+========================================================= */
+
+function generateAnswer(query, results) {
+
+    const top =
+        results
+            .slice(0, 3)
+            .map(x => x.doc.title);
+
+    let answer = "";
+
+    const q = query.toLowerCase();
+
+    if (q.includes("accuracy") ||
+        q.includes("accurate") ||
+        q.includes("rag")) {
+
+        answer =
+        `RAG can improve an LLM's answer quality by retrieving relevant information from an external knowledge base and supplying that information as context before generation. Instead of relying only on information stored in the model's parameters, the LLM can use retrieved evidence. A typical pipeline combines retrieval, reranking and context construction before generation.`;
+
+    } else if (q.includes("chunk")) {
+
+        answer =
+        `Chunking divides large documents into smaller retrieval units. Good chunking balances enough context for understanding with enough precision to avoid irrelevant information. Chunk size, overlap and semantic boundaries can significantly affect retrieval quality.`;
+
+    } else if (q.includes("embedding") ||
+               q.includes("vector")) {
+
+        answer =
+        `Embeddings convert text into numerical vectors representing semantic meaning. During retrieval, the query embedding is compared with stored document embeddings to find semantically similar chunks. Vector search is therefore useful when the query and document use different wording but express similar concepts.`;
+
+    } else if (q.includes("keyword") ||
+               q.includes("bm25")) {
+
+        answer =
+        `Keyword search performs lexical matching between the query and indexed documents. It is particularly useful for exact terms, identifiers, product names and technical terminology. In production RAG systems it is often combined with vector retrieval as part of hybrid search.`;
+
+    } else if (q.includes("rerank")) {
+
+        answer =
+        `Reranking takes the initial retrieval candidates and evaluates them using a stronger relevance model. The goal is to move the most useful chunks to the top before context is constructed. This can improve precision, although it adds additional computation and latency.`;
+
+    } else {
+
+        answer =
+        `The RAG pipeline retrieves relevant external information, selects the strongest evidence and passes that evidence to the LLM as context. The LLM then generates an answer grounded in the retrieved information.`;
+
+    }
+
+
+    document.getElementById("answer").innerHTML = `
+        <div class="answer-label">Generated Answer</div>
+
+        <div>${answer}</div>
+
+        <br>
+
+        <div style="font-size:11px;color:#98a2b3">
+            Retrieved context:
+            ${top.join(" • ")}
+        </div>
+    `;
+
+}
+
+
+/* =========================================================
+   EXAMPLES
+========================================================= */
+
+function setExample(number) {
+
+    if (number === 1) {
+
+        document.getElementById("query").value =
+            "How does vector search find semantically similar information?";
+
+    }
+
+    if (number === 2) {
+
+        document.getElementById("query").value =
+            "Why does RAG use keyword and vector search together?";
+
+    }
+
+    runRAG();
+
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function resetKnowledge() {
+
+    visited.clear();
+
+    document.getElementById("query").value =
+        "How does RAG improve the accuracy of an LLM?";
+
+    document.getElementById("retrievalResults").innerHTML =
+        `<p style="color:#98a2b3;font-size:13px">
+            Run the RAG pipeline to see retrieval results.
+        </p>`;
+
+    document.getElementById("chunks").innerHTML =
+        `<p style="color:#98a2b3;font-size:13px">
+            Retrieved chunks will appear here.
+        </p>`;
+
+    document.getElementById("answer").innerHTML = `
+        <div class="answer-label">Generated Answer</div>
+        Run the RAG pipeline to generate an answer.
+    `;
+
+    showStep(0);
+
+}
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+renderDocuments();
+
+showStep(0);
+
+document.getElementById("chunks").innerHTML =
+    `<p style="color:#98a2b3;font-size:13px">
+        Run the RAG pipeline to see retrieved chunks.
+    </p>`;
+
+document.getElementById("retrievalResults").innerHTML =
+    `<p style="color:#98a2b3;font-size:13px">
+        Run the RAG pipeline to see vector, keyword, hybrid and reranking scores.
+    </p>`;
+
+</script>
+
+</body>
+</html>
